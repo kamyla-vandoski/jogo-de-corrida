@@ -5,56 +5,45 @@ body {
     height: 100vh;
     margin: 0;
     background-color: #f0f0f0;
-    font-family: sans-serif;
-    overflow: hidden; /* Evita barras de rolagem */
 }
 
-#game {
+#game-container {
     width: 600px;
-    height: 200px;
-    border-bottom: 5px solid #333; /* A Pista/Chão */
-    position: relative;
-    background-color: #e0e0e0;
-    overflow: hidden; /* Esconde elementos fora da área */
-    cursor: pointer; /* Indica que é clicável */
+    height: 300px;
+    border: 3px solid #333;
+    background-color: #eee;
+    overflow: hidden; /* Importante: esconde elementos que saem da tela */
+    position: relative; /* Base para o posicionamento absoluto dos elementos */
 }
 
 #player {
-    width: 20px;
-    height: 20px;
-    background-color: royalblue; /* O "Carro" */
+    width: 30px;
+    height: 30px;
+    background-color: blue;
     position: absolute;
-    bottom: 0;
+    bottom: 0; /* Começa na linha de baixo */
     left: 50px;
-    transition: bottom 0.3s; /* Para animação de pulo suave */
+    transition: bottom 0.2s; /* Suaviza o movimento do pulo */
 }
 
-#obstacle {
+.obstacle {
     width: 20px;
-    height: 30px;
-    background-color: firebrick; /* O Obstáculo */
+    height: 40px;
+    background-color: red;
     position: absolute;
-    bottom: 0;
-    right: 0;
-    /* A animação de movimento será controlada pelo JavaScript */
+    bottom: 0; /* No chão */
+    right: -20px; /* Começa fora da tela */
 }
 
 #score {
     position: absolute;
     top: 10px;
-    left: 10px;
-    font-size: 1.2em;
+    right: 10px;
+    font-family: sans-serif;
+    font-size: 20px;
     font-weight: bold;
     color: #333;
 }
 
-/* Classe para o pulo */
-.jump {
-    animation: jump-animation 0.6s ease-out;
-}
-
-@keyframes jump-animation {
-    0% { bottom: 0; }
-    50% { bottom: 100px; } /* Altura máxima do pulo */
-    100% { bottom: 0; }
-}
+/* Animação CSS para o movimento do obstáculo (opcional, mas mais performático) */
+/* Por simplicidade, usaremos JavaScript no script.js */

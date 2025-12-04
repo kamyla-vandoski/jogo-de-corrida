@@ -1,77 +1,35 @@
 body {
     font-family: Arial, sans-serif;
-    background-color: #34495e;
-    color: white;
+    background-color: #f1c40f; /* Cor de banana! */
+    color: #333;
     text-align: center;
-    padding: 20px;
-}
-
-/* Configurações do Grid do Jogo */
-.memory-game {
-    width: 640px;
-    height: 640px;
-    margin: 40px auto;
-    display: grid;
-    /* Grid de 4 colunas x 4 linhas */
-    grid-template-columns: repeat(4, 1fr); 
-    grid-template-rows: repeat(4, 1fr);
-    perspective: 1000px; /* Habilita a perspectiva 3D para o efeito flip */
-}
-
-/* Estilo da Carta (O container) */
-.memory-card {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    transform: scale(0.95);
-    transform-style: preserve-3d; /* Permite que os filhos (frente/verso) girem */
-    transition: transform 0.5s; /* Duração da animação de virar */
-    cursor: pointer;
-}
-
-/* Classe adicionada via JS para virar a carta */
-.memory-card.flip {
-    transform: rotateY(180deg);
-}
-
-/* Frente e Verso da Carta */
-.face {
-    width: 100%;
-    height: 100%;
-    padding: 5px;
-    position: absolute;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    backface-visibility: hidden; /* IMPORTANTE: Esconde o verso ao virar 180deg */
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
-    font-size: 50px;
+    padding-top: 20px;
 }
 
-/* Verso (A imagem/emoji do animal) */
-.card-back {
-    background-color: white;
-    transform: rotateY(180deg); /* O verso começa virado */
+h1 {
+    color: #27ae60; /* Verde da floresta */
 }
 
-/* Frente (O que o jogador vê primeiro) */
-.card-front {
-    background-color: #f39c12; /* Cor de fundo da carta virada */
-    font-size: 80px;
-    color: #fff;
-    content: '?'; /* Opcional: Adicionar um ícone/texto */
+#gameCanvas {
+    background-color: #2ecc71; /* Cor de grama/folhas */
+    border: 5px solid #d35400; /* Borda marrom (tronco de árvore) */
+    margin: 20px 0;
 }
 
-/* Efeito ao acertar o par */
-.memory-card.match {
-    /* Mantém a carta virada e aplica um estilo de sucesso */
-    transform: rotateY(180deg);
-    pointer-events: none; /* Desabilita cliques em cartas encontradas */
-    opacity: 0.8;
-}
-
-.info {
-    margin-top: 20px;
+#info {
     font-size: 1.2em;
+    margin-bottom: 20px;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 1.1em;
+    cursor: pointer;
+    background-color: #e67e22; /* Cor de macaco */
+    color: white;
+    border: none;
+    border-radius: 5px;
 }

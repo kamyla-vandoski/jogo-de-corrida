@@ -3,17 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jogo da Memória dos Animais</title>
+    <title>Macaco Comilão de Bananas</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Jogo da Memória dos Animais</h1>
+    <h1>🐒 Macaco Comilão 🍌</h1>
     
-    <div class="memory-game">
-        </div>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    
+    <div id="info">
+        <p>Bananas Coletadas: <span id="score">0</span></p>
+        <p>Use as setas (↑ ↓ ← →) para guiar o macaco!</p>
+    </div>
 
-    <p class="info">Clique em duas cartas para encontrar os pares!</p>
+    <button onclick="startGame()">Começar!</button>
 
-    <script src="script.js" defer></script>
+    <script src="script.js"></script>
 </body>
 </html>

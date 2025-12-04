@@ -1,54 +1,77 @@
 body {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-    background-color: #2c3e50; /* Fundo escuro */
+    font-family: Arial, sans-serif;
+    background-color: #34495e;
+    color: white;
+    text-align: center;
+    padding: 20px;
 }
 
-#game-container {
-    width: 300px;
-    height: 600px; /* Mais alto, simulando o movimento para baixo */
-    border: 3px solid #f39c12; /* Borda de "pista" */
-    overflow: hidden;
-    position: relative;
-    background-color: #34495e; /* Cor da pista */
+/* Configurações do Grid do Jogo */
+.memory-game {
+    width: 640px;
+    height: 640px;
+    margin: 40px auto;
+    display: grid;
+    /* Grid de 4 colunas x 4 linhas */
+    grid-template-columns: repeat(4, 1fr); 
+    grid-template-rows: repeat(4, 1fr);
+    perspective: 1000px; /* Habilita a perspectiva 3D para o efeito flip */
 }
 
-#pista {
+/* Estilo da Carta (O container) */
+.memory-card {
     width: 100%;
     height: 100%;
     position: relative;
+    transform: scale(0.95);
+    transform-style: preserve-3d; /* Permite que os filhos (frente/verso) girem */
+    transition: transform 0.5s; /* Duração da animação de virar */
+    cursor: pointer;
 }
 
-#player {
-    width: 40px;
-    height: 40px;
-    background-color: #3498db; /* Azul vibrante */
-    position: absolute;
-    bottom: 20px; /* Posição inicial próxima à parte inferior */
-    left: 130px; /* Centralizado inicialmente (300px/2 - 40px/2 = 130) */
-    transition: left 0.1s; /* Suaviza o movimento lateral */
-    border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+/* Classe adicionada via JS para virar a carta */
+.memory-card.flip {
+    transform: rotateY(180deg);
 }
 
-.obstacle {
-    width: 60px; /* Os obstáculos serão mais largos */
-    height: 30px;
-    background-color: #e74c3c; /* Vermelho perigo */
+/* Frente e Verso da Carta */
+.face {
+    width: 100%;
+    height: 100%;
+    padding: 5px;
     position: absolute;
-    top: -50px; /* Começa acima da tela */
-    /* A posição 'left' será definida pelo JavaScript */
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    backface-visibility: hidden; /* IMPORTANTE: Esconde o verso ao virar 180deg */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 50px;
 }
 
-#score {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    font-family: monospace;
-    font-size: 24px;
-    color: white;
-    z-index: 10;
+/* Verso (A imagem/emoji do animal) */
+.card-back {
+    background-color: white;
+    transform: rotateY(180deg); /* O verso começa virado */
+}
+
+/* Frente (O que o jogador vê primeiro) */
+.card-front {
+    background-color: #f39c12; /* Cor de fundo da carta virada */
+    font-size: 80px;
+    color: #fff;
+    content: '?'; /* Opcional: Adicionar um ícone/texto */
+}
+
+/* Efeito ao acertar o par */
+.memory-card.match {
+    /* Mantém a carta virada e aplica um estilo de sucesso */
+    transform: rotateY(180deg);
+    pointer-events: none; /* Desabilita cliques em cartas encontradas */
+    opacity: 0.8;
+}
+
+.info {
+    margin-top: 20px;
+    font-size: 1.2em;
 }

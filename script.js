@@ -1,106 +1,132 @@
-const player = document.getElementById('player');
-const gameContainer = document.getElementById('game-container');
-const scoreDisplay = document.getElementById('score');
+const gameBoard = document.querySelector('.memory-game');
 
-// Configurações da Pista
-const PISTA_LARGURA = 300;
-const PLAYER_LARGURA = 40;
-const POSICOES_FAIXA = [20, 130, 240]; // 3 posições (esquerda, centro, direita)
-let jogadorFaixa = 1; // Começa na faixa do meio (índice 1)
+// Emojis de animais (4 pares para um grid 4x4, total de 8 cartas)
+// Vamos aumentar para 8 pares (16 cartas) para o grid 4x4
+const animalEmojis = [
+    '🐘', '🦒', '🐒', '🦁', 
+    '🦊', '🐼', '🐸', '🦉'
+];
 
-let gameSpeed = 3; 
-let score = 0;
-let gameOver = false;
+// Duplica a lista para criar os pares (total de 16 elementos)
+let cardsArray = [...animalEmojis, ...animalEmojis];
 
-// --- 1. Movimento Lateral do Jogador ---
+// Variáveis de estado do jogo
+let hasFlippedCard = false;
+let lockBoard = false; // Bloqueia cliques durante a checagem
+let firstCard, secondCard;
+let matchesFound = 0; // Contador de pares encontrados
 
-// Define a posição inicial do jogador
-player.style.left = POSICOES_FAIXA[jogadorFaixa] + 'px';
-
-function movePlayer(direcao) {
-    if (gameOver) return;
+// --- FUNÇÃO DE EMBARALHAR (Fisher-Yates) ---
+function shuffleCards() {
+    // Embaralha o array
+    cardsArray.sort(() => Math.random() - 0.5);
     
-    // Calcula o novo índice da faixa
-    let novaFaixa = jogadorFaixa + direcao;
+    // Zera o tabuleiro
+    gameBoard.innerHTML = '';
+    matchesFound = 0;
+}
 
-    // Garante que o jogador permaneça dentro dos limites
-    if (novaFaixa >= 0 && novaFaixa < POSICOES_FAIXA.length) {
-        jogadorFaixa = novaFaixa;
-        // Aplica a nova posição via CSS
-        player.style.left = POSICOES_FAIXA[jogadorFaixa] + 'px';
+// --- FUNÇÃO PARA CRIAR O TABULEIRO ---
+function createBoard() {
+    shuffleCards(); // Garante que a lista está embaralhada
+    
+    cardsArray.forEach(animal => {
+        // Cria o elemento da carta
+        const card = document.createElement('div');
+        card.classList.add('memory-card');
+        
+        // Define o valor do animal (para comparação)
+        card.dataset.animal = animal; 
+
+        // Adiciona a estrutura HTML da frente e verso
+        card.innerHTML = `
+            <div class="face card-back">${animal}</div>
+            <div class="face card-front">?</div>
+        `;
+        
+        // Adiciona o evento de clique e insere no tabuleiro
+        card.addEventListener('click', flipCard);
+        gameBoard.appendChild(card);
+    });
+}
+
+// --- FUNÇÃO DE VIRAR CARTA ---
+function flipCard() {
+    if (lockBoard) return; // Se o tabuleiro estiver bloqueado, ignora
+    if (this === firstCard) return; // Impede que o jogador clique duas vezes na mesma carta
+    
+    // Vira a carta
+    this.classList.add('flip');
+
+    if (!hasFlippedCard) {
+        // Primeiro clique
+        hasFlippedCard = true;
+        firstCard = this;
+        return;
+    }
+
+    // Segundo clique
+    secondCard = this;
+    
+    checkForMatch();
+}
+
+// --- FUNÇÃO DE CHECAGEM DE PARES ---
+function checkForMatch() {
+    let isMatch = firstCard.dataset.animal === secondCard.dataset.animal;
+    
+    if (isMatch) {
+        // Par encontrado!
+        disableCards();
+    } else {
+        // Erro, desvira as cartas após um tempo
+        unflipCards();
     }
 }
 
-// Escuta as teclas A e D ou Setas Esquerda/Direita
-document.addEventListener('keydown', (event) => {
-    if (event.key === 'a' || event.key === 'ArrowLeft') {
-        movePlayer(-1); // Move para a esquerda
-    } else if (event.key === 'd' || event.key === 'ArrowRight') {
-        movePlayer(1); // Move para a direita
+// --- FUNÇÃO PARA DESABILITAR CARTAS (Acerto) ---
+function disableCards() {
+    matchesFound++;
+    
+    // Adiciona a classe 'match' (mantém virada e desabilita clique)
+    firstCard.classList.add('match');
+    secondCard.classList.add('match');
+    
+    // Remove os event listeners para que as cartas não possam ser clicadas novamente
+    firstCard.removeEventListener('click', flipCard);
+    secondCard.removeEventListener('click', flipCard);
+
+    resetBoard();
+    
+    // Verifica se o jogo acabou
+    if (matchesFound === animalEmojis.length) {
+        setTimeout(() => {
+            alert(`Parabéns! Você encontrou todos os ${matchesFound} pares!`);
+            // Reinicia o jogo
+            createBoard();
+        }, 500);
     }
-});
-
-// --- 2. Criação e Movimento de Obstáculos ---
-
-function createObstacle() {
-    if (gameOver) return;
-
-    const obstacle = document.createElement('div');
-    obstacle.classList.add('obstacle');
-    
-    // Escolhe aleatoriamente uma das 3 faixas para o obstáculo
-    const faixaObstaculoIndex = Math.floor(Math.random() * POSICOES_FAIXA.length);
-    const obstacleLeft = POSICOES_FAIXA[faixaObstaculoIndex] - 10; // Ajuste fino
-    obstacle.style.left = obstacleLeft + 'px';
-    
-    // Armazena a faixa para fácil checagem de colisão
-    obstacle.dataset.faixa = faixaObstaculoIndex; 
-    
-    gameContainer.appendChild(obstacle);
-    let obstacleTop = -50; // Posição inicial (acima)
-
-    // Move o obstáculo para baixo
-    let moveInterval = setInterval(() => {
-        if (gameOver) {
-            clearInterval(moveInterval);
-            return;
-        }
-
-        obstacleTop += gameSpeed;
-        obstacle.style.top = obstacleTop + 'px';
-
-        // 1. Colisão
-        // Checa se o obstáculo está na mesma faixa E se está na altura do jogador
-        if (obstacle.dataset.faixa == jogadorFaixa) {
-            if (obstacleTop > 530 && obstacleTop < 580) { // Altura de colisão
-                clearInterval(moveInterval);
-                endGame();
-            }
-        }
-
-        // 2. Obstáculo saiu da tela (ponto!)
-        if (obstacleTop > 600) {
-            clearInterval(moveInterval);
-            obstacle.remove();
-            score++;
-            scoreDisplay.textContent = `Pontos: ${score}`;
-            gameSpeed += 0.05; // Aumenta a velocidade sutilmente
-        }
-
-    }, 20);
 }
 
-// Inicia a criação de obstáculos a cada 1.2 segundos
-let obstacleInterval = setInterval(createObstacle, 1200);
-
-// --- 3. Fim de Jogo ---
-
-function endGame() {
-    gameOver = true;
-    clearInterval(obstacleInterval);
-    // Para todos os intervalos de movimento de obstáculos existentes
-    document.querySelectorAll('.obstacle').forEach(obs => obs.remove()); 
+// --- FUNÇÃO PARA DESVIRAR CARTAS (Erro) ---
+function unflipCards() {
+    lockBoard = true; // Bloqueia cliques
     
-    alert(`Fim de Jogo! Você desviou de ${score} obstáculos.`);
-    location.reload(); 
+    setTimeout(() => {
+        firstCard.classList.remove('flip');
+        secondCard.classList.remove('flip');
+        
+        resetBoard();
+    }, 1000); // Vira de volta após 1 segundo
 }
+
+// --- FUNÇÃO PARA RESETAR O ESTADO ---
+function resetBoard() {
+    [hasFlippedCard, lockBoard] = [false, false];
+    [firstCard, secondCard] = [null, null];
+}
+
+// -------------------------------------
+// INICIA O JOGO AO CARREGAR A PÁGINA
+// -------------------------------------
+createBoard();

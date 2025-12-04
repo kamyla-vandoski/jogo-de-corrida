@@ -1,0 +1,60 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background-color: #f0f0f0;
+    font-family: sans-serif;
+    overflow: hidden; /* Evita barras de rolagem */
+}
+
+#game {
+    width: 600px;
+    height: 200px;
+    border-bottom: 5px solid #333; /* A Pista/Chão */
+    position: relative;
+    background-color: #e0e0e0;
+    overflow: hidden; /* Esconde elementos fora da área */
+    cursor: pointer; /* Indica que é clicável */
+}
+
+#player {
+    width: 20px;
+    height: 20px;
+    background-color: royalblue; /* O "Carro" */
+    position: absolute;
+    bottom: 0;
+    left: 50px;
+    transition: bottom 0.3s; /* Para animação de pulo suave */
+}
+
+#obstacle {
+    width: 20px;
+    height: 30px;
+    background-color: firebrick; /* O Obstáculo */
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    /* A animação de movimento será controlada pelo JavaScript */
+}
+
+#score {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Classe para o pulo */
+.jump {
+    animation: jump-animation 0.6s ease-out;
+}
+
+@keyframes jump-animation {
+    0% { bottom: 0; }
+    50% { bottom: 100px; } /* Altura máxima do pulo */
+    100% { bottom: 0; }
+}

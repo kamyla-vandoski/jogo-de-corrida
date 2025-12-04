@@ -1,132 +1,131 @@
-const gameBoard = document.querySelector('.memory-game');
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const scoreDisplay = document.getElementById('score');
 
-// Emojis de animais (4 pares para um grid 4x4, total de 8 cartas)
-// Vamos aumentar para 8 pares (16 cartas) para o grid 4x4
-const animalEmojis = [
-    '🐘', '🦒', '🐒', '🦁', 
-    '🦊', '🐼', '🐸', '🦉'
-];
+// Configurações
+const TILE_SIZE = 20; // Tamanho do bloco
+const GRID_SIZE = canvas.width / TILE_SIZE; // 20 blocos
 
-// Duplica a lista para criar os pares (total de 16 elementos)
-let cardsArray = [...animalEmojis, ...animalEmojis];
+let monkey = { x: 10 * TILE_SIZE, y: 10 * TILE_SIZE }; // Macaco é um único bloco
+let banana = {};
+let dx = 0; // Direção em X (começa parado)
+let dy = 0; // Direção em Y (começa parado)
+let score = 0;
+let gameLoop;
+let isPaused = true;
 
-// Variáveis de estado do jogo
-let hasFlippedCard = false;
-let lockBoard = false; // Bloqueia cliques durante a checagem
-let firstCard, secondCard;
-let matchesFound = 0; // Contador de pares encontrados
+// --- 1. FUNÇÕES DE INICIALIZAÇÃO ---
 
-// --- FUNÇÃO DE EMBARALHAR (Fisher-Yates) ---
-function shuffleCards() {
-    // Embaralha o array
-    cardsArray.sort(() => Math.random() - 0.5);
+function initGame() {
+    monkey = { x: 10 * TILE_SIZE, y: 10 * TILE_SIZE };
+    dx = 0;
+    dy = 0;
+    score = 0;
+    scoreDisplay.textContent = score;
+    isPaused = false;
     
-    // Zera o tabuleiro
-    gameBoard.innerHTML = '';
-    matchesFound = 0;
+    generateBanana(); 
 }
 
-// --- FUNÇÃO PARA CRIAR O TABULEIRO ---
-function createBoard() {
-    shuffleCards(); // Garante que a lista está embaralhada
-    
-    cardsArray.forEach(animal => {
-        // Cria o elemento da carta
-        const card = document.createElement('div');
-        card.classList.add('memory-card');
-        
-        // Define o valor do animal (para comparação)
-        card.dataset.animal = animal; 
-
-        // Adiciona a estrutura HTML da frente e verso
-        card.innerHTML = `
-            <div class="face card-back">${animal}</div>
-            <div class="face card-front">?</div>
-        `;
-        
-        // Adiciona o evento de clique e insere no tabuleiro
-        card.addEventListener('click', flipCard);
-        gameBoard.appendChild(card);
-    });
+function generateBanana() {
+    // Gera coordenadas aleatórias que se encaixam na grade
+    banana = {
+        x: Math.floor(Math.random() * GRID_SIZE) * TILE_SIZE,
+        y: Math.floor(Math.random() * GRID_SIZE) * TILE_SIZE
+    };
+    // Não precisamos checar colisão com o corpo, pois o macaco é um bloco só
 }
 
-// --- FUNÇÃO DE VIRAR CARTA ---
-function flipCard() {
-    if (lockBoard) return; // Se o tabuleiro estiver bloqueado, ignora
-    if (this === firstCard) return; // Impede que o jogador clique duas vezes na mesma carta
-    
-    // Vira a carta
-    this.classList.add('flip');
+// --- 2. FUNÇÃO PRINCIPAL DE DESENHO E ATUALIZAÇÃO ---
 
-    if (!hasFlippedCard) {
-        // Primeiro clique
-        hasFlippedCard = true;
-        firstCard = this;
+function draw() {
+    // Limpa a tela (fundo da floresta)
+    ctx.fillStyle = '#2ecc71';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Desenha a Banana (Comida)
+    ctx.fillStyle = '#f1c40f'; // Amarelo vibrante
+    ctx.fillRect(banana.x, banana.y, TILE_SIZE, TILE_SIZE);
+    ctx.strokeStyle = '#e67e22'; // Destaque marrom
+    ctx.strokeRect(banana.x, banana.y, TILE_SIZE, TILE_SIZE);
+
+    // Desenha o Macaco (Jogador)
+    ctx.fillStyle = '#d35400'; // Marrom
+    ctx.fillRect(monkey.x, monkey.y, TILE_SIZE, TILE_SIZE);
+}
+
+function update() {
+    if (isPaused) return;
+
+    // 1. Calcula a nova posição do macaco
+    const nextX = monkey.x + dx;
+    const nextY = monkey.y + dy;
+
+    // 2. Colisão (Paredes)
+    if (nextX < 0 || nextX >= canvas.width || nextY < 0 || nextY >= canvas.height) {
+        endGame();
         return;
     }
-
-    // Segundo clique
-    secondCard = this;
     
-    checkForMatch();
+    // Atualiza a posição do macaco
+    monkey.x = nextX;
+    monkey.y = nextY;
+
+    // 3. Checa se comeu a banana
+    if (monkey.x === banana.x && monkey.y === banana.y) {
+        score++;
+        scoreDisplay.textContent = score;
+        generateBanana(); // Gera nova banana
+    }
+    
+    draw();
 }
 
-// --- FUNÇÃO DE CHECAGEM DE PARES ---
-function checkForMatch() {
-    let isMatch = firstCard.dataset.animal === secondCard.dataset.animal;
-    
-    if (isMatch) {
-        // Par encontrado!
-        disableCards();
-    } else {
-        // Erro, desvira as cartas após um tempo
-        unflipCards();
+// --- 3. CONTROLE DE TECLADO ---
+
+document.addEventListener('keydown', changeDirection);
+
+function changeDirection(event) {
+    const LEFT_KEY = 37;
+    const RIGHT_KEY = 39;
+    const UP_KEY = 38;
+    const DOWN_KEY = 40;
+
+    const keyPressed = event.keyCode;
+
+    // Apenas muda a direção se o macaco não estiver se movendo na direção oposta
+    if (keyPressed === LEFT_KEY && dx !== TILE_SIZE) {
+        dx = -TILE_SIZE;
+        dy = 0;
+    } else if (keyPressed === UP_KEY && dy !== TILE_SIZE) {
+        dx = 0;
+        dy = -TILE_SIZE;
+    } else if (keyPressed === RIGHT_KEY && dx !== -TILE_SIZE) {
+        dx = TILE_SIZE;
+        dy = 0;
+    } else if (keyPressed === DOWN_KEY && dy !== -TILE_SIZE) {
+        dx = 0;
+        dy = TILE_SIZE;
     }
 }
 
-// --- FUNÇÃO PARA DESABILITAR CARTAS (Acerto) ---
-function disableCards() {
-    matchesFound++;
-    
-    // Adiciona a classe 'match' (mantém virada e desabilita clique)
-    firstCard.classList.add('match');
-    secondCard.classList.add('match');
-    
-    // Remove os event listeners para que as cartas não possam ser clicadas novamente
-    firstCard.removeEventListener('click', flipCard);
-    secondCard.removeEventListener('click', flipCard);
+// --- 4. CONTROLE DO JOGO ---
 
-    resetBoard();
-    
-    // Verifica se o jogo acabou
-    if (matchesFound === animalEmojis.length) {
-        setTimeout(() => {
-            alert(`Parabéns! Você encontrou todos os ${matchesFound} pares!`);
-            // Reinicia o jogo
-            createBoard();
-        }, 500);
+function startGame() {
+    if (!isPaused) {
+        clearInterval(gameLoop);
     }
+    initGame();
+    draw(); // Desenha o estado inicial
+    // Velocidade de atualização (a cada 150 milissegundos)
+    gameLoop = setInterval(update, 150); 
 }
 
-// --- FUNÇÃO PARA DESVIRAR CARTAS (Erro) ---
-function unflipCards() {
-    lockBoard = true; // Bloqueia cliques
-    
-    setTimeout(() => {
-        firstCard.classList.remove('flip');
-        secondCard.classList.remove('flip');
-        
-        resetBoard();
-    }, 1000); // Vira de volta após 1 segundo
+function endGame() {
+    isPaused = true;
+    clearInterval(gameLoop);
+    alert(`Ops, bateu! Você coletou ${score} bananas. Clique em 'Começar!' para tentar novamente.`);
 }
 
-// --- FUNÇÃO PARA RESETAR O ESTADO ---
-function resetBoard() {
-    [hasFlippedCard, lockBoard] = [false, false];
-    [firstCard, secondCard] = [null, null];
-}
-
-// -------------------------------------
-// INICIA O JOGO AO CARREGAR A PÁGINA
-// -------------------------------------
-createBoard();
+// Desenha a tela inicial
+draw();

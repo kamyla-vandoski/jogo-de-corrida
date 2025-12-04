@@ -4,46 +4,51 @@ body {
     align-items: center;
     height: 100vh;
     margin: 0;
-    background-color: #f0f0f0;
+    background-color: #2c3e50; /* Fundo escuro */
 }
 
 #game-container {
-    width: 600px;
-    height: 300px;
-    border: 3px solid #333;
-    background-color: #eee;
-    overflow: hidden; /* Importante: esconde elementos que saem da tela */
-    position: relative; /* Base para o posicionamento absoluto dos elementos */
+    width: 300px;
+    height: 600px; /* Mais alto, simulando o movimento para baixo */
+    border: 3px solid #f39c12; /* Borda de "pista" */
+    overflow: hidden;
+    position: relative;
+    background-color: #34495e; /* Cor da pista */
+}
+
+#pista {
+    width: 100%;
+    height: 100%;
+    position: relative;
 }
 
 #player {
-    width: 30px;
-    height: 30px;
-    background-color: blue;
+    width: 40px;
+    height: 40px;
+    background-color: #3498db; /* Azul vibrante */
     position: absolute;
-    bottom: 0; /* Começa na linha de baixo */
-    left: 50px;
-    transition: bottom 0.2s; /* Suaviza o movimento do pulo */
+    bottom: 20px; /* Posição inicial próxima à parte inferior */
+    left: 130px; /* Centralizado inicialmente (300px/2 - 40px/2 = 130) */
+    transition: left 0.1s; /* Suaviza o movimento lateral */
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
 .obstacle {
-    width: 20px;
-    height: 40px;
-    background-color: red;
+    width: 60px; /* Os obstáculos serão mais largos */
+    height: 30px;
+    background-color: #e74c3c; /* Vermelho perigo */
     position: absolute;
-    bottom: 0; /* No chão */
-    right: -20px; /* Começa fora da tela */
+    top: -50px; /* Começa acima da tela */
+    /* A posição 'left' será definida pelo JavaScript */
 }
 
 #score {
     position: absolute;
     top: 10px;
-    right: 10px;
-    font-family: sans-serif;
-    font-size: 20px;
-    font-weight: bold;
-    color: #333;
+    left: 10px;
+    font-family: monospace;
+    font-size: 24px;
+    color: white;
+    z-index: 10;
 }
-
-/* Animação CSS para o movimento do obstáculo (opcional, mas mais performático) */
-/* Por simplicidade, usaremos JavaScript no script.js */

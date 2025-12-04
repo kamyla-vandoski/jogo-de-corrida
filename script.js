@@ -1,87 +1,102 @@
 const player = document.getElementById('player');
-const obstacle = document.getElementById('obstacle');
-const game = document.getElementById('game');
+const gameContainer = document.getElementById('game-container');
 const scoreDisplay = document.getElementById('score');
-let score = 0;
+
 let isJumping = false;
-let gameRunning = true;
+let gameSpeed = 5; // Velocidade inicial do movimento do obstáculo
+let score = 0;
+let gameOver = false;
 
-// --- 1. Pulo do Jogador ---
+// --- FUNÇÃO DE PULO DO JOGADOR ---
 function jump() {
-    if (isJumping || !gameRunning) return;
-    
+    if (isJumping) return;
     isJumping = true;
-    player.classList.add('jump');
 
-    setTimeout(() => {
-        player.classList.remove('jump');
-        isJumping = false;
-    }, 600); // Deve corresponder à duração da animação no CSS
+    // Sobe (Pulo)
+    let upInterval = setInterval(() => {
+        let playerBottom = parseInt(window.getComputedStyle(player).getPropertyValue('bottom'));
+        if (playerBottom < 150) { // Altura máxima do pulo
+            player.style.bottom = (playerBottom + 10) + 'px';
+        } else {
+            clearInterval(upInterval);
+
+            // Desce (Gravidade)
+            let downInterval = setInterval(() => {
+                let playerBottom = parseInt(window.getComputedStyle(player).getPropertyValue('bottom'));
+                if (playerBottom > 0) { // Volta para o chão (bottom = 0)
+                    player.style.bottom = (playerBottom - 10) + 'px';
+                } else {
+                    clearInterval(downInterval);
+                    isJumping = false;
+                }
+            }, 20);
+        }
+    }, 20);
 }
 
-// O jogo começa com um clique ou toque na área do jogo
-document.addEventListener('click', jump);
-document.addEventListener('touchstart', jump); // Para dispositivos móveis
-document.addEventListener('keydown', (e) => {
-    if (e.code === 'Space') {
+// Escuta a tecla SPACE para pular
+document.addEventListener('keydown', (event) => {
+    if (event.code === 'Space' && !isJumping && !gameOver) {
         jump();
     }
 });
 
+// --- FUNÇÃO PARA CRIAR E MOVER OBSTÁCULOS ---
+function createObstacle() {
+    if (gameOver) return;
 
-// --- 2. Movimento do Obstáculo ---
-function moveObstacle() {
-    let obstaclePosition = 600; // Começa fora da tela
+    const obstacle = document.createElement('div');
+    obstacle.classList.add('obstacle');
+    obstacle.style.height = (Math.random() * 40 + 20) + 'px'; // Altura variável (20 a 60px)
+    obstacle.style.bottom = '0px'; 
+    gameContainer.appendChild(obstacle);
 
-    const moveInterval = setInterval(() => {
-        if (!gameRunning) {
+    let obstaclePosition = 600; // Posição inicial (fora da tela)
+
+    // Move o obstáculo
+    let moveInterval = setInterval(() => {
+        if (gameOver) {
             clearInterval(moveInterval);
             return;
         }
 
-        obstaclePosition -= 5; // Velocidade do obstáculo
-
-        if (obstaclePosition < -20) {
-            // Obstáculo saiu da tela, resetar
-            obstaclePosition = 600;
-            obstacle.style.height = (Math.random() * 20 + 20) + 'px'; // Altura aleatória
-            score++;
-            scoreDisplay.textContent = `Pontos: ${score}`;
-        }
-
+        obstaclePosition -= gameSpeed;
         obstacle.style.right = obstaclePosition + 'px';
 
-        // --- 3. Checagem de Colisão ---
+        // 1. Colisão
         const playerRect = player.getBoundingClientRect();
         const obstacleRect = obstacle.getBoundingClientRect();
 
-        // Se o jogador estiver na mesma área horizontal do obstáculo
-        const overlapX = playerRect.right > obstacleRect.left && playerRect.left < obstacleRect.right;
-        
-        // E o jogador não estiver pulando alto o suficiente (área vertical)
-        const overlapY = playerRect.bottom > obstacleRect.top;
-
-        if (overlapX && overlapY) {
-            gameOver();
+        // Checagem de colisão simples (se as caixas se sobrepõem)
+        if (
+            playerRect.right > obstacleRect.left &&
+            playerRect.left < obstacleRect.right &&
+            playerRect.bottom > obstacleRect.top
+        ) {
             clearInterval(moveInterval);
+            endGame();
         }
 
-    }, 20); // Atualiza a cada 20ms
+        // 2. Obstáculo saiu da tela
+        if (obstaclePosition <= -20) {
+            clearInterval(moveInterval);
+            obstacle.remove();
+            score++;
+            scoreDisplay.textContent = `Pontos: ${score}`;
+            gameSpeed += 0.1; // Aumenta a dificuldade
+        }
+
+    }, 20);
 }
 
-// --- 4. Fim do Jogo ---
-function gameOver() {
-    gameRunning = false;
-    // Estilo de "game over"
-    game.style.borderBottomColor = 'red';
-    player.style.backgroundColor = 'red';
-    
-    // Mensagem de Game Over
-    const gameOverMessage = document.createElement('div');
-    gameOverMessage.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: red; font-size: 2em;';
-    gameOverMessage.textContent = `GAME OVER! Pontuação Final: ${score}`;
-    game.appendChild(gameOverMessage);
-}
+// Cria um novo obstáculo em um intervalo regular
+let obstacleInterval = setInterval(createObstacle, 1500); // Cria um novo a cada 1.5s
 
-// Inicia o jogo
-moveObstacle();
+// --- FUNÇÃO DE FIM DE JOGO ---
+function endGame() {
+    gameOver = true;
+    clearInterval(obstacleInterval);
+    document.removeEventListener('keydown', jump);
+    alert(`Fim de Jogo! Sua pontuação foi: ${score}`);
+    location.reload(); // Recarrega a página para reiniciar
+}
